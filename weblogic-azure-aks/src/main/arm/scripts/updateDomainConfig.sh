@@ -229,7 +229,8 @@ cat <<EOF >>$filePath
   restartVersion: '${restartVersion}'
 
   configuration:
-
+    # Need more time for A series VM size
+    introspectorJobActiveDeadlineSeconds: ${constIntrospectorJobActiveDeadlineSeconds}
     # Settings for domainHomeSourceType 'FromModel'
     model:
       # Valid model domain types are 'WLS', 'JRF', and 'RestrictedJRF', default is 'WLS'
