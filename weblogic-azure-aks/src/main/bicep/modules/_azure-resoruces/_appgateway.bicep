@@ -65,7 +65,6 @@ var obj_frontendIPConfigurations2 = [
   {
     name: name_frontEndPrivateIPConfig
     properties: {
-      privateIPAllocationMethod: 'Static'
       privateIPAddress: staticPrivateFrontentIP
       subnet: {
         id: gatewaySubnetId
