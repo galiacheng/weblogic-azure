@@ -1344,7 +1344,7 @@
                                 "type": "Microsoft.Common.CheckBox",
                                 "label": "Configure frontend IP with private IP address",
                                 "toolTip": "If checked, expose WebLogic Server with private IP address.",
-                                "visible": false
+                                "visible": true
                             },
                             {
                                 "name": "keyVaultText00",
