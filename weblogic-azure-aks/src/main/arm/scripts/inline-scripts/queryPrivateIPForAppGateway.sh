@@ -11,9 +11,7 @@ function query_ip() {
 
     # select a available private IP
     # azure reserves the first 3 private IPs.
-    local ret=$(az network vnet check-ip-address \
-        --ids ${SUBNET_ID} \
-        --ip-address ${KNOWN_IP})
+    local ret=$(az network vnet subnet list-available-ips --ids ${SUBNET_ID})
     local available=$(echo ${ret} | jq -r .available)
     if [[ "${available,,}" == "true" ]]; then
       outputPrivateIP=${KNOWN_IP}
