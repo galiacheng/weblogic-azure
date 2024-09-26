@@ -10,19 +10,15 @@ function query_ip() {
     echo_stdout "Subnet Id: ${SUBNET_ID}"
 
     # select a available private IP
-    # azure reserves the first 3 private IPs.
+    # output looks like: [ "172.16.0.4", "172.16.0.5", "172.16.0.6", "172.16.0.7", "172.16.0.8" ]
     local ret=$(az network vnet subnet list-available-ips --ids ${SUBNET_ID})
-    local available=$(echo ${ret} | jq -r .available)
-    if [[ "${available,,}" == "true" ]]; then
-      outputPrivateIP=${KNOWN_IP}
-    else
-      local privateIPAddress=$(echo ${ret} | jq -r .availableIpAddresses[0])
-      if [[ -z "${privateIPAddress}" ]] || [[ "${privateIPAddress}"=="null" ]]; then
-        echo_stderr "ERROR: make sure there is available IP for application gateway in your subnet."
-      fi
+    local length=$(echo ${ret} | jq length)
 
-      outputPrivateIP=${privateIPAddress}
-    fi
+    if [[ "$length" =~ ^[0-9]+$ ]] && [ "$length" -gt 0 ]; then
+      outputPrivateIP=$(echo ${ret} | jq -r '.[0]')
+    else
+      echo_stderr "ERROR: make sure there is available IP for application gateway in your subnet."
+    fi    
 }
 
 function output_result() {
@@ -35,7 +31,7 @@ function output_result() {
 }
 
 # main script
-outputPrivateIP="10.0.0.1"
+outputPrivateIP=${KNOWN_IP}
 
 query_ip
 
