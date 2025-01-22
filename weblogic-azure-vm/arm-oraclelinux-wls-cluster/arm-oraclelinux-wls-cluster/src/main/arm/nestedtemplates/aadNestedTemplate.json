@@ -73,7 +73,7 @@
             "type": "object",
             "defaultValue": {},
             "metadata": {
-                "description": "${label.tagsLabel}"
+                "description": "Tags for the resources."
             }
         },
         "wlsDomainName": {
@@ -172,9 +172,9 @@
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "${azure.apiVersionForDeployment}",
-            "tags": "[parameters('tagsByResource')['${identifier.resourcesDeployment}']]",
-            "name": "${cluster.aad.start}",
+            "apiVersion": "2023-07-01",
+            "tags": "[parameters('tagsByResource')['Microsoft resources deployment']]",
+            "name": "cae84e84-407c-5cef-b2a0-cd95d4ff8824",
             "properties": {
                 "mode": "Incremental",
                 "template": {
@@ -186,9 +186,9 @@
             }
         },
         {
-            "apiVersion": "${azure.apiVersionForVirtualMachines}",
+            "apiVersion": "2023-07-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "tags": "[parameters('tagsByResource')['${identifier.virtualMachinesExtensions}']]",
+            "tags": "[parameters('tagsByResource')['Virtual machine extension']]",
             "name": "[concat(variables('const_managedVMPrefix'), add(copyIndex(), 1),'/newuserscript')]",
             "location": "[parameters('location')]",
             "copy": {
@@ -211,9 +211,9 @@
             }
         },
         {
-            "apiVersion": "${azure.apiVersionForVirtualMachines}",
+            "apiVersion": "2023-07-01",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "tags": "[parameters('tagsByResource')['${identifier.virtualMachinesExtensions}']]",
+            "tags": "[parameters('tagsByResource')['Virtual machine extension']]",
             "name": "[concat(parameters('adminVMName'),'/newuserscript')]",
             "location": "[parameters('location')]",
             "dependsOn": [
@@ -236,9 +236,9 @@
         },
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "${azure.apiVersionForDeployment}",
-            "tags": "[parameters('tagsByResource')['${identifier.resourcesDeployment}']]",
-            "name": "${cluster.aad.end}",
+            "apiVersion": "2023-07-01",
+            "tags": "[parameters('tagsByResource')['Microsoft resources deployment']]",
+            "name": "3031eeaf-f67e-5f61-8bf1-aad6006eaf6d",
             "dependsOn": [
                 "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('adminVMName'), 'newuserscript')]"
             ],

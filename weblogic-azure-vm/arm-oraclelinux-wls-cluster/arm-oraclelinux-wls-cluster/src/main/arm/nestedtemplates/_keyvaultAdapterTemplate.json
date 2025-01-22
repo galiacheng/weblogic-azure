@@ -82,7 +82,7 @@
             "type": "object",
             "defaultValue": {},
             "metadata": {
-                "description": "${label.tagsLabel}"
+                "description": "Tags for the resources."
             }
         }
     },
@@ -96,9 +96,9 @@
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "${azure.apiVersionForDeployment}",
-            "tags": "[parameters('tagsByResource')['${identifier.resourcesDeployment}']]",
-            "name": "${cluster.appgateway.keyvault.start}",
+            "apiVersion": "2023-07-01",
+            "tags": "[parameters('tagsByResource')['Microsoft resources deployment']]",
+            "name": "ed922d8d-975f-55d4-b33a-28fbace13f76",
             "properties": {
                 "mode": "Incremental",
                 "template": {
@@ -110,9 +110,9 @@
             }
         },
         {
-            "apiVersion": "${azure.apiVersionForDeployment}",
+            "apiVersion": "2023-07-01",
             "type": "Microsoft.Resources/deployments",
-            "tags": "[parameters('tagsByResource')['${identifier.resourcesDeployment}']]",
+            "tags": "[parameters('tagsByResource')['Microsoft resources deployment']]",
             "name": "keyVaultwithSelfSignedAppGatewaySSLCert",
             "condition": "[not(parameters('useExistingAppGatewaySSLCertificate'))]",
             "properties": {
@@ -144,9 +144,9 @@
             }
         },
         {
-            "apiVersion": "${azure.apiVersionForDeployment}",
+            "apiVersion": "2023-07-01",
             "type": "Microsoft.Resources/deployments",
-            "tags": "[parameters('tagsByResource')['${identifier.resourcesDeployment}']]",
+            "tags": "[parameters('tagsByResource')['Microsoft resources deployment']]",
             "name": "keyVaultwithExistingAppGatewaySSLCert",
             "condition": "[parameters('useExistingAppGatewaySSLCertificate')]",
             "properties": {
@@ -188,9 +188,9 @@
         },
         {
             "type": "Microsoft.Resources/deployments",
-            "apiVersion": "${azure.apiVersionForDeployment}",
-            "tags": "[parameters('tagsByResource')['${identifier.resourcesDeployment}']]",
-            "name": "${cluster.appgateway.keyvault.end}",
+            "apiVersion": "2023-07-01",
+            "tags": "[parameters('tagsByResource')['Microsoft resources deployment']]",
+            "name": "b29b66f4-5623-586e-96a2-663ac0d84e35",
             "properties": {
                 "mode": "Incremental",
                 "template": {
@@ -209,15 +209,15 @@
         },
         "keyVaultName": {
             "type": "string",
-            "value": "[if(parameters('useExistingAppGatewaySSLCertificate'), reference('keyVaultwithExistingAppGatewaySSLCert', '${azure.apiVersionForDeployment}').outputs.keyvaultName.value, reference('keyVaultwithSelfSignedAppGatewaySSLCert', '${azure.apiVersionForDeployment}').outputs.keyvaultName.value)]"
+            "value": "[if(parameters('useExistingAppGatewaySSLCertificate'), reference('keyVaultwithExistingAppGatewaySSLCert', '2023-07-01').outputs.keyvaultName.value, reference('keyVaultwithSelfSignedAppGatewaySSLCert', '2023-07-01').outputs.keyvaultName.value)]"
         },
         "sslCertDataSecretName": {
             "type": "string",
-            "value": "[if(parameters('useExistingAppGatewaySSLCertificate'), reference('keyVaultwithExistingAppGatewaySSLCert', '${azure.apiVersionForDeployment}').outputs.sslCertDataSecretName.value, reference('keyVaultwithSelfSignedAppGatewaySSLCert', '${azure.apiVersionForDeployment}').outputs.secretName.value)]"
+            "value": "[if(parameters('useExistingAppGatewaySSLCertificate'), reference('keyVaultwithExistingAppGatewaySSLCert', '2023-07-01').outputs.sslCertDataSecretName.value, reference('keyVaultwithSelfSignedAppGatewaySSLCert', '2023-07-01').outputs.secretName.value)]"
         },
         "sslCertPwdSecretName": {
             "type": "string",
-            "value": "[if(parameters('useExistingAppGatewaySSLCertificate'), reference('keyVaultwithExistingAppGatewaySSLCert', '${azure.apiVersionForDeployment}').outputs.sslCertPwdSecretName.value, '')]"
+            "value": "[if(parameters('useExistingAppGatewaySSLCertificate'), reference('keyVaultwithExistingAppGatewaySSLCert', '2023-07-01').outputs.sslCertPwdSecretName.value, '')]"
         }
     }
 }
