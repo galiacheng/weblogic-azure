@@ -1,0 +1,1339 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.30.23.60470",
+      "templateHash": "11743479763074324652"
+    }
+  },
+  "parameters": {
+    "_artifactsLocation": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/oracle/weblogic-azure/main/weblogic-azure-aks/src/main/arm/"
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "defaultValue": ""
+    },
+    "aksClusterName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of an existing AKS cluster."
+      }
+    },
+    "databaseType": {
+      "type": "string",
+      "defaultValue": "oracle",
+      "allowedValues": [
+        "oracle",
+        "postgresql",
+        "sqlserver",
+        "mysql",
+        "otherdb"
+      ],
+      "metadata": {
+        "description": "One of the supported database types"
+      }
+    },
+    "dbConfigurationType": {
+      "type": "string",
+      "defaultValue": "createOrUpdate",
+      "allowedValues": [
+        "createOrUpdate",
+        "delete"
+      ],
+      "metadata": {
+        "description": "createOrUpdate: create a new data source connection, or update an existing data source connection. delete: delete an existing data source connection"
+      }
+    },
+    "dbGlobalTranPro": {
+      "type": "string",
+      "defaultValue": "EmulateTwoPhaseCommit",
+      "metadata": {
+        "description": "Determines the transaction protocol (global transaction processing behavior) for the data source."
+      }
+    },
+    "dbPassword": {
+      "type": "securestring",
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "Password for Database"
+      }
+    },
+    "dbUser": {
+      "type": "string",
+      "defaultValue": "contosoDbUser",
+      "metadata": {
+        "description": "User id of Database"
+      }
+    },
+    "dsConnectionURL": {
+      "type": "string",
+      "defaultValue": "jdbc:postgresql://contoso.postgres.database.azure.com:5432/postgres",
+      "metadata": {
+        "description": "JDBC Connection String"
+      }
+    },
+    "identity": {
+      "type": "object",
+      "defaultValue": {}
+    },
+    "jdbcDataSourceName": {
+      "type": "string",
+      "defaultValue": "jdbc/contoso",
+      "metadata": {
+        "description": "JNDI Name for JDBC Datasource"
+      }
+    },
+    "tagsByResource": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "tags for the resources"
+      }
+    },
+    "utcValue": {
+      "type": "string",
+      "defaultValue": "[utcNow()]"
+    },
+    "wlsDomainUID": {
+      "type": "string",
+      "defaultValue": "sample-domain1",
+      "metadata": {
+        "description": "UID of WebLogic domain, used in WebLogic Operator."
+      }
+    },
+    "wlsPassword": {
+      "type": "securestring"
+    },
+    "wlsUserName": {
+      "type": "string",
+      "defaultValue": "weblogic",
+      "metadata": {
+        "description": "User name for WebLogic Administrator."
+      }
+    }
+  },
+  "variables": {
+    "const_azCliVersion": "2.33.1",
+    "_objTagsByResource": {
+      "Microsoft.Monitor/accounts": "[if(contains(parameters('tagsByResource'), 'Microsoft.Monitor/accounts'), parameters('tagsByResource')['Microsoft.Monitor/accounts'], json('{}'))]",
+      "Microsoft.ContainerService/managedClusters": "[if(contains(parameters('tagsByResource'), 'Microsoft.ContainerService/managedClusters'), parameters('tagsByResource')['Microsoft.ContainerService/managedClusters'], json('{}'))]",
+      "Microsoft.Network/applicationGateways": "[if(contains(parameters('tagsByResource'), 'Microsoft.Network/applicationGateways'), parameters('tagsByResource')['Microsoft.Network/applicationGateways'], json('{}'))]",
+      "Microsoft.ContainerRegistry/registries": "[if(contains(parameters('tagsByResource'), 'Microsoft.ContainerRegistry/registries'), parameters('tagsByResource')['Microsoft.ContainerRegistry/registries'], json('{}'))]",
+      "Microsoft.Compute/virtualMachines": "[if(contains(parameters('tagsByResource'), 'Microsoft.Compute/virtualMachines'), parameters('tagsByResource')['Microsoft.Compute/virtualMachines'], json('{}'))]",
+      "Virtual machine extension": "[if(contains(parameters('tagsByResource'), 'Virtual machine extension'), parameters('tagsByResource')['Virtual machine extension'], json('{}'))]",
+      "Microsoft.Network/virtualNetworks": "[if(contains(parameters('tagsByResource'), 'Microsoft.Network/virtualNetworks'), parameters('tagsByResource')['Microsoft.Network/virtualNetworks'], json('{}'))]",
+      "Microsoft.Network/networkInterfaces": "[if(contains(parameters('tagsByResource'), 'Microsoft.Network/networkInterfaces'), parameters('tagsByResource')['Microsoft.Network/networkInterfaces'], json('{}'))]",
+      "Microsoft.Network/networkSecurityGroups": "[if(contains(parameters('tagsByResource'), 'Microsoft.Network/networkSecurityGroups'), parameters('tagsByResource')['Microsoft.Network/networkSecurityGroups'], json('{}'))]",
+      "Microsoft.Network/publicIPAddresses": "[if(contains(parameters('tagsByResource'), 'Microsoft.Network/publicIPAddresses'), parameters('tagsByResource')['Microsoft.Network/publicIPAddresses'], json('{}'))]",
+      "Microsoft.Storage/storageAccounts": "[if(contains(parameters('tagsByResource'), 'Microsoft.Storage/storageAccounts'), parameters('tagsByResource')['Microsoft.Storage/storageAccounts'], json('{}'))]",
+      "Microsoft.KeyVault/vaults": "[if(contains(parameters('tagsByResource'), 'Microsoft.KeyVault/vaults'), parameters('tagsByResource')['Microsoft.KeyVault/vaults'], json('{}'))]",
+      "Microsoft.ManagedIdentity/userAssignedIdentities": "[if(contains(parameters('tagsByResource'), 'Microsoft.ManagedIdentity/userAssignedIdentities'), parameters('tagsByResource')['Microsoft.ManagedIdentity/userAssignedIdentities'], json('{}'))]",
+      "Microsoft.Network/dnszones": "[if(contains(parameters('tagsByResource'), 'Microsoft.Network/dnszones'), parameters('tagsByResource')['Microsoft.Network/dnszones'], json('{}'))]",
+      "Microsoft.OperationalInsights/workspaces": "[if(contains(parameters('tagsByResource'), 'Microsoft.OperationalInsights/workspaces'), parameters('tagsByResource')['Microsoft.OperationalInsights/workspaces'], json('{}'))]",
+      "Microsoft.Resources/deploymentScripts": "[if(contains(parameters('tagsByResource'), 'Microsoft.Resources/deploymentScripts'), parameters('tagsByResource')['Microsoft.Resources/deploymentScripts'], json('{}'))]"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "initialization",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "15352389298674985113"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "defaultValue": "pid"
+            }
+          },
+          "resources": [
+            {
+              "condition": "[not(equals(parameters('name'), 'pid'))]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[parameters('name')]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.30.23.60470",
+                      "templateHash": "14276079886145786764"
+                    }
+                  },
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "defaultValue": "This is an empty deployment"
+                    }
+                  },
+                  "resources": [],
+                  "outputs": {
+                    "name": {
+                      "type": "string",
+                      "value": "[parameters('name')]"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "appgwEnd": {
+              "type": "string",
+              "value": "47ea43a0-95cf-52c7-aee8-7ee6106fc1bf"
+            },
+            "appgwStart": {
+              "type": "string",
+              "value": "01288010-2672-5831-a66b-7b8b45cace1b"
+            },
+            "autoScalingEnd": {
+              "type": "string",
+              "value": "fff261b8-f09f-4c46-b7b7-923c239f1da5"
+            },
+            "autoScalingStart": {
+              "type": "string",
+              "value": "94fd65ac-bb13-475d-aba7-3352288777c2"
+            },
+            "customCertForAppgw": {
+              "type": "string",
+              "value": "b80f52c3-dddd-5286-915e-e4cc64be3093"
+            },
+            "cpuUtilization": {
+              "type": "string",
+              "value": "deb6b656-aa63-4014-a686-6a01e8f87fec"
+            },
+            "dbEnd": {
+              "type": "string",
+              "value": "d7a9c78e-39d9-5a47-928d-8645ed86dafd"
+            },
+            "dbStart": {
+              "type": "string",
+              "value": "0cc86800-37f4-5191-9368-2953394309ec"
+            },
+            "dnsEnd": {
+              "type": "string",
+              "value": "754e16bc-4d81-5343-b99b-7532abd6587d"
+            },
+            "dnsStart": {
+              "type": "string",
+              "value": "64ae895c-feb3-529e-8435-5d2e49f94e09"
+            },
+            "enableWlsMonitoringExporter": {
+              "type": "string",
+              "value": "5e607302-2e52-42c4-8f02-29db35e3ddf1"
+            },
+            "lbEnd": {
+              "type": "string",
+              "value": "ce664543-77bd-515a-832e-107e32f99da9"
+            },
+            "lbStart": {
+              "type": "string",
+              "value": "44732bbc-04c4-5df7-a0c6-b9be9ec00ee6"
+            },
+            "networkingEnd": {
+              "type": "string",
+              "value": "2798165c-49fa-5701-b608-b80ed3986176"
+            },
+            "networkingStart": {
+              "type": "string",
+              "value": "0793308f-de9d-5f0d-92f9-d9fc4b413b8b"
+            },
+            "memoryUtilization": {
+              "type": "string",
+              "value": "d1c2d027-f030-4a18-8e74-d608dd10c6f3"
+            },
+            "otherDb": {
+              "type": "string",
+              "value": "fceccc86-531c-5e44-99fd-9f1250f8e409"
+            },
+            "pswlessDbEnd": {
+              "type": "string",
+              "value": "972084b9-2b2d-5eb9-aa37-80448a77fbe1"
+            },
+            "pswlessDbStart": {
+              "type": "string",
+              "value": "7190b263-7825-5ae3-bc56-7294df936d4a"
+            },
+            "sslEnd": {
+              "type": "string",
+              "value": "6738fb2b-4383-520e-bf8a-b4e00162b692"
+            },
+            "sslStart": {
+              "type": "string",
+              "value": "29953382-5f6a-5bcf-9453-0bb82475951c"
+            },
+            "wlsAKSEnd": {
+              "type": "string",
+              "value": "2571f846-2f66-5c22-9fe6-38ecea7889ac"
+            },
+            "wlsAKSStart": {
+              "type": "string",
+              "value": "3e6acde5-9a62-5488-9fd4-87c46f4105f4"
+            },
+            "wlsClusterAppEnd": {
+              "type": "string",
+              "value": "e6e33240-e5db-52fc-9154-7fc7b3b8b508"
+            },
+            "wlsClusterAppStart": {
+              "type": "string",
+              "value": "4570a81a-3f3a-53d5-b178-7f985d9c5ecf"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "create-update-delete-datasource",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "_pidEnd": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'initialization'), '2022-09-01').outputs.dbEnd.value]"
+          },
+          "_pidOtherDb": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'initialization'), '2022-09-01').outputs.otherDb.value]"
+          },
+          "_pidStart": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'initialization'), '2022-09-01').outputs.dbStart.value]"
+          },
+          "_artifactsLocation": {
+            "value": "[parameters('_artifactsLocation')]"
+          },
+          "_artifactsLocationSasToken": {
+            "value": "[parameters('_artifactsLocationSasToken')]"
+          },
+          "_globalResourceNameSuffix": {
+            "value": "[uniqueString(parameters('utcValue'))]"
+          },
+          "aksClusterName": {
+            "value": "[parameters('aksClusterName')]"
+          },
+          "aksClusterRGName": {
+            "value": "[resourceGroup().name]"
+          },
+          "azCliVersion": {
+            "value": "[variables('const_azCliVersion')]"
+          },
+          "databaseType": {
+            "value": "[parameters('databaseType')]"
+          },
+          "dbConfigurationType": {
+            "value": "[parameters('dbConfigurationType')]"
+          },
+          "dbGlobalTranPro": {
+            "value": "[parameters('dbGlobalTranPro')]"
+          },
+          "dbPassword": {
+            "value": "[parameters('dbPassword')]"
+          },
+          "dbUser": {
+            "value": "[parameters('dbUser')]"
+          },
+          "dsConnectionURL": {
+            "value": "[parameters('dsConnectionURL')]"
+          },
+          "identity": {
+            "value": "[parameters('identity')]"
+          },
+          "jdbcDataSourceName": {
+            "value": "[parameters('jdbcDataSourceName')]"
+          },
+          "location": {
+            "value": "[resourceGroup().location]"
+          },
+          "tagsByResource": {
+            "value": "[variables('_objTagsByResource')]"
+          },
+          "wlsDomainUID": {
+            "value": "[parameters('wlsDomainUID')]"
+          },
+          "wlsPassword": {
+            "value": "[parameters('wlsPassword')]"
+          },
+          "wlsUserName": {
+            "value": "[parameters('wlsUserName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "6699512263520170666"
+            }
+          },
+          "parameters": {
+            "_artifactsLocation": {
+              "type": "string",
+              "defaultValue": "[deployment().properties.templateLink.uri]"
+            },
+            "_artifactsLocationSasToken": {
+              "type": "securestring",
+              "defaultValue": ""
+            },
+            "_globalResourceNameSuffix": {
+              "type": "string"
+            },
+            "_pidEnd": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "_pidStart": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "_pidOtherDb": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "aksClusterName": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Name of an existing AKS cluster."
+              }
+            },
+            "aksClusterRGName": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "azCliVersion": {
+              "type": "string",
+              "defaultValue": ""
+            },
+            "databaseType": {
+              "type": "string",
+              "defaultValue": "oracle",
+              "metadata": {
+                "description": "One of the supported database types"
+              }
+            },
+            "dbConfigurationType": {
+              "type": "string",
+              "defaultValue": "createOrUpdate",
+              "allowedValues": [
+                "createOrUpdate",
+                "delete"
+              ]
+            },
+            "dbDriverName": {
+              "type": "string",
+              "defaultValue": "org.contoso.Driver",
+              "metadata": {
+                "description": "Datasource driver name"
+              }
+            },
+            "dbGlobalTranPro": {
+              "type": "string",
+              "defaultValue": "EmulateTwoPhaseCommit",
+              "metadata": {
+                "description": "Determines the transaction protocol (global transaction processing behavior) for the data source."
+              }
+            },
+            "dbPassword": {
+              "type": "securestring",
+              "defaultValue": "[newGuid()]",
+              "metadata": {
+                "description": "Password for Database"
+              }
+            },
+            "dbTestTableName": {
+              "type": "string",
+              "defaultValue": "Null",
+              "metadata": {
+                "description": "The name of the database table to use when testing physical database connections. This name is required when you specify a Test Frequency and enable Test Reserved Connections."
+              }
+            },
+            "dbUser": {
+              "type": "string",
+              "defaultValue": "contosoDbUser",
+              "metadata": {
+                "description": "User id of Database"
+              }
+            },
+            "dsConnectionURL": {
+              "type": "string",
+              "defaultValue": "jdbc:postgresql://contoso.postgres.database.azure.com:5432/postgres",
+              "metadata": {
+                "description": "JDBC Connection String"
+              }
+            },
+            "identity": {
+              "type": "object",
+              "defaultValue": {}
+            },
+            "jdbcDataSourceName": {
+              "type": "string",
+              "defaultValue": "jdbc/contoso",
+              "metadata": {
+                "description": "JNDI Name for JDBC Datasource"
+              }
+            },
+            "location": {
+              "type": "string"
+            },
+            "tagsByResource": {
+              "type": "object",
+              "metadata": {
+                "description": "Tags for the resources."
+              }
+            },
+            "wlsDomainUID": {
+              "type": "string",
+              "defaultValue": "sample-domain1",
+              "metadata": {
+                "description": "UID of WebLogic domain, used in WebLogic Operator."
+              }
+            },
+            "wlsPassword": {
+              "type": "securestring"
+            },
+            "wlsUserName": {
+              "type": "string",
+              "defaultValue": "weblogic",
+              "metadata": {
+                "description": "User name for WebLogic Administrator."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "wls-aks-db-start-pid-deployment",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "name": {
+                    "value": "[parameters('_pidStart')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.30.23.60470",
+                      "templateHash": "15352389298674985113"
+                    }
+                  },
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "defaultValue": "pid"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "condition": "[not(equals(parameters('name'), 'pid'))]",
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2022-09-01",
+                      "name": "[parameters('name')]",
+                      "properties": {
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "mode": "Incremental",
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "metadata": {
+                            "_generator": {
+                              "name": "bicep",
+                              "version": "0.30.23.60470",
+                              "templateHash": "14276079886145786764"
+                            }
+                          },
+                          "parameters": {
+                            "name": {
+                              "type": "string",
+                              "defaultValue": "This is an empty deployment"
+                            }
+                          },
+                          "resources": [],
+                          "outputs": {
+                            "name": {
+                              "type": "string",
+                              "value": "[parameters('name')]"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "outputs": {
+                    "appgwEnd": {
+                      "type": "string",
+                      "value": "47ea43a0-95cf-52c7-aee8-7ee6106fc1bf"
+                    },
+                    "appgwStart": {
+                      "type": "string",
+                      "value": "01288010-2672-5831-a66b-7b8b45cace1b"
+                    },
+                    "autoScalingEnd": {
+                      "type": "string",
+                      "value": "fff261b8-f09f-4c46-b7b7-923c239f1da5"
+                    },
+                    "autoScalingStart": {
+                      "type": "string",
+                      "value": "94fd65ac-bb13-475d-aba7-3352288777c2"
+                    },
+                    "customCertForAppgw": {
+                      "type": "string",
+                      "value": "b80f52c3-dddd-5286-915e-e4cc64be3093"
+                    },
+                    "cpuUtilization": {
+                      "type": "string",
+                      "value": "deb6b656-aa63-4014-a686-6a01e8f87fec"
+                    },
+                    "dbEnd": {
+                      "type": "string",
+                      "value": "d7a9c78e-39d9-5a47-928d-8645ed86dafd"
+                    },
+                    "dbStart": {
+                      "type": "string",
+                      "value": "0cc86800-37f4-5191-9368-2953394309ec"
+                    },
+                    "dnsEnd": {
+                      "type": "string",
+                      "value": "754e16bc-4d81-5343-b99b-7532abd6587d"
+                    },
+                    "dnsStart": {
+                      "type": "string",
+                      "value": "64ae895c-feb3-529e-8435-5d2e49f94e09"
+                    },
+                    "enableWlsMonitoringExporter": {
+                      "type": "string",
+                      "value": "5e607302-2e52-42c4-8f02-29db35e3ddf1"
+                    },
+                    "lbEnd": {
+                      "type": "string",
+                      "value": "ce664543-77bd-515a-832e-107e32f99da9"
+                    },
+                    "lbStart": {
+                      "type": "string",
+                      "value": "44732bbc-04c4-5df7-a0c6-b9be9ec00ee6"
+                    },
+                    "networkingEnd": {
+                      "type": "string",
+                      "value": "2798165c-49fa-5701-b608-b80ed3986176"
+                    },
+                    "networkingStart": {
+                      "type": "string",
+                      "value": "0793308f-de9d-5f0d-92f9-d9fc4b413b8b"
+                    },
+                    "memoryUtilization": {
+                      "type": "string",
+                      "value": "d1c2d027-f030-4a18-8e74-d608dd10c6f3"
+                    },
+                    "otherDb": {
+                      "type": "string",
+                      "value": "fceccc86-531c-5e44-99fd-9f1250f8e409"
+                    },
+                    "pswlessDbEnd": {
+                      "type": "string",
+                      "value": "972084b9-2b2d-5eb9-aa37-80448a77fbe1"
+                    },
+                    "pswlessDbStart": {
+                      "type": "string",
+                      "value": "7190b263-7825-5ae3-bc56-7294df936d4a"
+                    },
+                    "sslEnd": {
+                      "type": "string",
+                      "value": "6738fb2b-4383-520e-bf8a-b4e00162b692"
+                    },
+                    "sslStart": {
+                      "type": "string",
+                      "value": "29953382-5f6a-5bcf-9453-0bb82475951c"
+                    },
+                    "wlsAKSEnd": {
+                      "type": "string",
+                      "value": "2571f846-2f66-5c22-9fe6-38ecea7889ac"
+                    },
+                    "wlsAKSStart": {
+                      "type": "string",
+                      "value": "3e6acde5-9a62-5488-9fd4-87c46f4105f4"
+                    },
+                    "wlsClusterAppEnd": {
+                      "type": "string",
+                      "value": "e6e33240-e5db-52fc-9154-7fc7b3b8b508"
+                    },
+                    "wlsClusterAppStart": {
+                      "type": "string",
+                      "value": "4570a81a-3f3a-53d5-b178-7f985d9c5ecf"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "condition": "[equals(parameters('databaseType'), 'otherdb')]",
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "wls-other-db-pid-deployment",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "name": {
+                    "value": "[parameters('_pidOtherDb')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.30.23.60470",
+                      "templateHash": "15352389298674985113"
+                    }
+                  },
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "defaultValue": "pid"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "condition": "[not(equals(parameters('name'), 'pid'))]",
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2022-09-01",
+                      "name": "[parameters('name')]",
+                      "properties": {
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "mode": "Incremental",
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "metadata": {
+                            "_generator": {
+                              "name": "bicep",
+                              "version": "0.30.23.60470",
+                              "templateHash": "14276079886145786764"
+                            }
+                          },
+                          "parameters": {
+                            "name": {
+                              "type": "string",
+                              "defaultValue": "This is an empty deployment"
+                            }
+                          },
+                          "resources": [],
+                          "outputs": {
+                            "name": {
+                              "type": "string",
+                              "value": "[parameters('name')]"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "outputs": {
+                    "appgwEnd": {
+                      "type": "string",
+                      "value": "47ea43a0-95cf-52c7-aee8-7ee6106fc1bf"
+                    },
+                    "appgwStart": {
+                      "type": "string",
+                      "value": "01288010-2672-5831-a66b-7b8b45cace1b"
+                    },
+                    "autoScalingEnd": {
+                      "type": "string",
+                      "value": "fff261b8-f09f-4c46-b7b7-923c239f1da5"
+                    },
+                    "autoScalingStart": {
+                      "type": "string",
+                      "value": "94fd65ac-bb13-475d-aba7-3352288777c2"
+                    },
+                    "customCertForAppgw": {
+                      "type": "string",
+                      "value": "b80f52c3-dddd-5286-915e-e4cc64be3093"
+                    },
+                    "cpuUtilization": {
+                      "type": "string",
+                      "value": "deb6b656-aa63-4014-a686-6a01e8f87fec"
+                    },
+                    "dbEnd": {
+                      "type": "string",
+                      "value": "d7a9c78e-39d9-5a47-928d-8645ed86dafd"
+                    },
+                    "dbStart": {
+                      "type": "string",
+                      "value": "0cc86800-37f4-5191-9368-2953394309ec"
+                    },
+                    "dnsEnd": {
+                      "type": "string",
+                      "value": "754e16bc-4d81-5343-b99b-7532abd6587d"
+                    },
+                    "dnsStart": {
+                      "type": "string",
+                      "value": "64ae895c-feb3-529e-8435-5d2e49f94e09"
+                    },
+                    "enableWlsMonitoringExporter": {
+                      "type": "string",
+                      "value": "5e607302-2e52-42c4-8f02-29db35e3ddf1"
+                    },
+                    "lbEnd": {
+                      "type": "string",
+                      "value": "ce664543-77bd-515a-832e-107e32f99da9"
+                    },
+                    "lbStart": {
+                      "type": "string",
+                      "value": "44732bbc-04c4-5df7-a0c6-b9be9ec00ee6"
+                    },
+                    "networkingEnd": {
+                      "type": "string",
+                      "value": "2798165c-49fa-5701-b608-b80ed3986176"
+                    },
+                    "networkingStart": {
+                      "type": "string",
+                      "value": "0793308f-de9d-5f0d-92f9-d9fc4b413b8b"
+                    },
+                    "memoryUtilization": {
+                      "type": "string",
+                      "value": "d1c2d027-f030-4a18-8e74-d608dd10c6f3"
+                    },
+                    "otherDb": {
+                      "type": "string",
+                      "value": "fceccc86-531c-5e44-99fd-9f1250f8e409"
+                    },
+                    "pswlessDbEnd": {
+                      "type": "string",
+                      "value": "972084b9-2b2d-5eb9-aa37-80448a77fbe1"
+                    },
+                    "pswlessDbStart": {
+                      "type": "string",
+                      "value": "7190b263-7825-5ae3-bc56-7294df936d4a"
+                    },
+                    "sslEnd": {
+                      "type": "string",
+                      "value": "6738fb2b-4383-520e-bf8a-b4e00162b692"
+                    },
+                    "sslStart": {
+                      "type": "string",
+                      "value": "29953382-5f6a-5bcf-9453-0bb82475951c"
+                    },
+                    "wlsAKSEnd": {
+                      "type": "string",
+                      "value": "2571f846-2f66-5c22-9fe6-38ecea7889ac"
+                    },
+                    "wlsAKSStart": {
+                      "type": "string",
+                      "value": "3e6acde5-9a62-5488-9fd4-87c46f4105f4"
+                    },
+                    "wlsClusterAppEnd": {
+                      "type": "string",
+                      "value": "e6e33240-e5db-52fc-9154-7fc7b3b8b508"
+                    },
+                    "wlsClusterAppStart": {
+                      "type": "string",
+                      "value": "4570a81a-3f3a-53d5-b178-7f985d9c5ecf"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "create-update-datasource",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "_artifactsLocation": {
+                    "value": "[parameters('_artifactsLocation')]"
+                  },
+                  "_artifactsLocationSasToken": {
+                    "value": "[parameters('_artifactsLocationSasToken')]"
+                  },
+                  "_globalResourceNameSuffix": {
+                    "value": "[parameters('_globalResourceNameSuffix')]"
+                  },
+                  "aksClusterName": {
+                    "value": "[parameters('aksClusterName')]"
+                  },
+                  "aksClusterRGName": {
+                    "value": "[parameters('aksClusterRGName')]"
+                  },
+                  "azCliVersion": {
+                    "value": "[parameters('azCliVersion')]"
+                  },
+                  "databaseType": {
+                    "value": "[parameters('databaseType')]"
+                  },
+                  "dbConfigurationType": {
+                    "value": "[parameters('dbConfigurationType')]"
+                  },
+                  "dbDriverName": {
+                    "value": "[parameters('dbDriverName')]"
+                  },
+                  "dbGlobalTranPro": {
+                    "value": "[parameters('dbGlobalTranPro')]"
+                  },
+                  "dbPassword": {
+                    "value": "[parameters('dbPassword')]"
+                  },
+                  "dbTestTableName": {
+                    "value": "[parameters('dbTestTableName')]"
+                  },
+                  "dbUser": {
+                    "value": "[parameters('dbUser')]"
+                  },
+                  "dsConnectionURL": {
+                    "value": "[parameters('dsConnectionURL')]"
+                  },
+                  "identity": {
+                    "value": "[parameters('identity')]"
+                  },
+                  "jdbcDataSourceName": {
+                    "value": "[parameters('jdbcDataSourceName')]"
+                  },
+                  "location": {
+                    "value": "[parameters('location')]"
+                  },
+                  "tagsByResource": {
+                    "value": "[parameters('tagsByResource')]"
+                  },
+                  "wlsDomainUID": {
+                    "value": "[parameters('wlsDomainUID')]"
+                  },
+                  "wlsPassword": {
+                    "value": "[parameters('wlsPassword')]"
+                  },
+                  "wlsUserName": {
+                    "value": "[parameters('wlsUserName')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.30.23.60470",
+                      "templateHash": "10569075642120918650"
+                    }
+                  },
+                  "parameters": {
+                    "_artifactsLocation": {
+                      "type": "string",
+                      "defaultValue": "[deployment().properties.templateLink.uri]"
+                    },
+                    "_artifactsLocationSasToken": {
+                      "type": "securestring",
+                      "defaultValue": ""
+                    },
+                    "_globalResourceNameSuffix": {
+                      "type": "string"
+                    },
+                    "aksClusterName": {
+                      "type": "string"
+                    },
+                    "aksClusterRGName": {
+                      "type": "string"
+                    },
+                    "databaseType": {
+                      "type": "string",
+                      "defaultValue": "oracle"
+                    },
+                    "azCliVersion": {
+                      "type": "string",
+                      "defaultValue": ""
+                    },
+                    "dbConfigurationType": {
+                      "type": "string",
+                      "defaultValue": "createOrUpdate"
+                    },
+                    "dbDriverName": {
+                      "type": "string",
+                      "defaultValue": "org.contoso.Driver"
+                    },
+                    "dbGlobalTranPro": {
+                      "type": "string",
+                      "defaultValue": "EmulateTwoPhaseCommit"
+                    },
+                    "dbPassword": {
+                      "type": "securestring",
+                      "defaultValue": "[newGuid()]"
+                    },
+                    "dbTestTableName": {
+                      "type": "string",
+                      "defaultValue": "Null"
+                    },
+                    "dbUser": {
+                      "type": "string"
+                    },
+                    "dsConnectionURL": {
+                      "type": "string"
+                    },
+                    "enablePswlessConnection": {
+                      "type": "bool",
+                      "defaultValue": false
+                    },
+                    "identity": {
+                      "type": "object",
+                      "defaultValue": {}
+                    },
+                    "jdbcDataSourceName": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "tagsByResource": {
+                      "type": "object",
+                      "metadata": {
+                        "description": "Tags for the resources."
+                      }
+                    },
+                    "utcValue": {
+                      "type": "string",
+                      "defaultValue": "[utcNow()]"
+                    },
+                    "wlsDomainUID": {
+                      "type": "string",
+                      "defaultValue": "sample-domain1"
+                    },
+                    "wlsPassword": {
+                      "type": "securestring"
+                    },
+                    "wlsUserName": {
+                      "type": "string",
+                      "defaultValue": "weblogic",
+                      "metadata": {
+                        "description": "User name for WebLogic Administrator."
+                      }
+                    }
+                  },
+                  "variables": {
+                    "const_commonScript": "common.sh",
+                    "const_datasourceScript": "setupDBConnections.sh",
+                    "const_datasourceModelScript": "genDatasourceModel.sh",
+                    "const_dbUtilityScript": "dbUtility.sh",
+                    "const_scriptLocation": "[uri(parameters('_artifactsLocation'), 'scripts/')]",
+                    "const_utilityScript": "utility.sh"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Resources/deploymentScripts",
+                      "apiVersion": "2023-08-01",
+                      "name": "[format('ds-wls-db-connection-{0}', parameters('_globalResourceNameSuffix'))]",
+                      "location": "[parameters('location')]",
+                      "kind": "AzureCLI",
+                      "identity": "[parameters('identity')]",
+                      "tags": "[parameters('tagsByResource')['Microsoft.Resources/deploymentScripts']]",
+                      "properties": {
+                        "azCliVersion": "[parameters('azCliVersion')]",
+                        "environmentVariables": [
+                          {
+                            "name": "AKS_RESOURCE_GROUP_NAME",
+                            "value": "[parameters('aksClusterRGName')]"
+                          },
+                          {
+                            "name": "AKS_NAME",
+                            "value": "[parameters('aksClusterName')]"
+                          },
+                          {
+                            "name": "DATABASE_TYPE",
+                            "value": "[parameters('databaseType')]"
+                          },
+                          {
+                            "name": "DB_CONFIGURATION_TYPE",
+                            "value": "[parameters('dbConfigurationType')]"
+                          },
+                          {
+                            "name": "DB_PASSWORD",
+                            "secureValue": "[parameters('dbPassword')]"
+                          },
+                          {
+                            "name": "DB_USER",
+                            "value": "[parameters('dbUser')]"
+                          },
+                          {
+                            "name": "DB_CONNECTION_STRING",
+                            "value": "[parameters('dsConnectionURL')]"
+                          },
+                          {
+                            "name": "DB_DRIVER_NAME",
+                            "value": "[parameters('dbDriverName')]"
+                          },
+                          {
+                            "name": "ENABLE_PASSWORDLESS_CONNECTION",
+                            "value": "[string(parameters('enablePswlessConnection'))]"
+                          },
+                          {
+                            "name": "GLOBAL_TRANSATION_PROTOCOL",
+                            "value": "[parameters('dbGlobalTranPro')]"
+                          },
+                          {
+                            "name": "JDBC_DATASOURCE_NAME",
+                            "value": "[parameters('jdbcDataSourceName')]"
+                          },
+                          {
+                            "name": "TEST_TABLE_NAME",
+                            "value": "[parameters('dbTestTableName')]"
+                          },
+                          {
+                            "name": "WLS_DOMAIN_UID",
+                            "value": "[parameters('wlsDomainUID')]"
+                          },
+                          {
+                            "name": "WLS_DOMAIN_USER",
+                            "value": "[parameters('wlsUserName')]"
+                          },
+                          {
+                            "name": "WLS_DOMAIN_PASSWORD",
+                            "secureValue": "[parameters('wlsPassword')]"
+                          }
+                        ],
+                        "primaryScriptUri": "[uri(variables('const_scriptLocation'), format('{0}{1}', variables('const_datasourceScript'), parameters('_artifactsLocationSasToken')))]",
+                        "supportingScriptUris": [
+                          "[uri(variables('const_scriptLocation'), format('{0}{1}', variables('const_commonScript'), parameters('_artifactsLocationSasToken')))]",
+                          "[uri(variables('const_scriptLocation'), format('{0}{1}', variables('const_utilityScript'), parameters('_artifactsLocationSasToken')))]",
+                          "[uri(variables('const_scriptLocation'), format('{0}{1}', variables('const_dbUtilityScript'), parameters('_artifactsLocationSasToken')))]",
+                          "[uri(variables('const_scriptLocation'), format('{0}{1}', variables('const_datasourceModelScript'), parameters('_artifactsLocationSasToken')))]"
+                        ],
+                        "cleanupPreference": "OnSuccess",
+                        "retentionInterval": "P1D",
+                        "forceUpdateTag": "[parameters('utcValue')]"
+                      }
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'wls-other-db-pid-deployment')]",
+                "[resourceId('Microsoft.Resources/deployments', 'wls-aks-db-start-pid-deployment')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "wls-aks-db-end-pid-deployment",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "name": {
+                    "value": "[parameters('_pidEnd')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.30.23.60470",
+                      "templateHash": "15352389298674985113"
+                    }
+                  },
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "defaultValue": "pid"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "condition": "[not(equals(parameters('name'), 'pid'))]",
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2022-09-01",
+                      "name": "[parameters('name')]",
+                      "properties": {
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "mode": "Incremental",
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "metadata": {
+                            "_generator": {
+                              "name": "bicep",
+                              "version": "0.30.23.60470",
+                              "templateHash": "14276079886145786764"
+                            }
+                          },
+                          "parameters": {
+                            "name": {
+                              "type": "string",
+                              "defaultValue": "This is an empty deployment"
+                            }
+                          },
+                          "resources": [],
+                          "outputs": {
+                            "name": {
+                              "type": "string",
+                              "value": "[parameters('name')]"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "outputs": {
+                    "appgwEnd": {
+                      "type": "string",
+                      "value": "47ea43a0-95cf-52c7-aee8-7ee6106fc1bf"
+                    },
+                    "appgwStart": {
+                      "type": "string",
+                      "value": "01288010-2672-5831-a66b-7b8b45cace1b"
+                    },
+                    "autoScalingEnd": {
+                      "type": "string",
+                      "value": "fff261b8-f09f-4c46-b7b7-923c239f1da5"
+                    },
+                    "autoScalingStart": {
+                      "type": "string",
+                      "value": "94fd65ac-bb13-475d-aba7-3352288777c2"
+                    },
+                    "customCertForAppgw": {
+                      "type": "string",
+                      "value": "b80f52c3-dddd-5286-915e-e4cc64be3093"
+                    },
+                    "cpuUtilization": {
+                      "type": "string",
+                      "value": "deb6b656-aa63-4014-a686-6a01e8f87fec"
+                    },
+                    "dbEnd": {
+                      "type": "string",
+                      "value": "d7a9c78e-39d9-5a47-928d-8645ed86dafd"
+                    },
+                    "dbStart": {
+                      "type": "string",
+                      "value": "0cc86800-37f4-5191-9368-2953394309ec"
+                    },
+                    "dnsEnd": {
+                      "type": "string",
+                      "value": "754e16bc-4d81-5343-b99b-7532abd6587d"
+                    },
+                    "dnsStart": {
+                      "type": "string",
+                      "value": "64ae895c-feb3-529e-8435-5d2e49f94e09"
+                    },
+                    "enableWlsMonitoringExporter": {
+                      "type": "string",
+                      "value": "5e607302-2e52-42c4-8f02-29db35e3ddf1"
+                    },
+                    "lbEnd": {
+                      "type": "string",
+                      "value": "ce664543-77bd-515a-832e-107e32f99da9"
+                    },
+                    "lbStart": {
+                      "type": "string",
+                      "value": "44732bbc-04c4-5df7-a0c6-b9be9ec00ee6"
+                    },
+                    "networkingEnd": {
+                      "type": "string",
+                      "value": "2798165c-49fa-5701-b608-b80ed3986176"
+                    },
+                    "networkingStart": {
+                      "type": "string",
+                      "value": "0793308f-de9d-5f0d-92f9-d9fc4b413b8b"
+                    },
+                    "memoryUtilization": {
+                      "type": "string",
+                      "value": "d1c2d027-f030-4a18-8e74-d608dd10c6f3"
+                    },
+                    "otherDb": {
+                      "type": "string",
+                      "value": "fceccc86-531c-5e44-99fd-9f1250f8e409"
+                    },
+                    "pswlessDbEnd": {
+                      "type": "string",
+                      "value": "972084b9-2b2d-5eb9-aa37-80448a77fbe1"
+                    },
+                    "pswlessDbStart": {
+                      "type": "string",
+                      "value": "7190b263-7825-5ae3-bc56-7294df936d4a"
+                    },
+                    "sslEnd": {
+                      "type": "string",
+                      "value": "6738fb2b-4383-520e-bf8a-b4e00162b692"
+                    },
+                    "sslStart": {
+                      "type": "string",
+                      "value": "29953382-5f6a-5bcf-9453-0bb82475951c"
+                    },
+                    "wlsAKSEnd": {
+                      "type": "string",
+                      "value": "2571f846-2f66-5c22-9fe6-38ecea7889ac"
+                    },
+                    "wlsAKSStart": {
+                      "type": "string",
+                      "value": "3e6acde5-9a62-5488-9fd4-87c46f4105f4"
+                    },
+                    "wlsClusterAppEnd": {
+                      "type": "string",
+                      "value": "e6e33240-e5db-52fc-9154-7fc7b3b8b508"
+                    },
+                    "wlsClusterAppStart": {
+                      "type": "string",
+                      "value": "4570a81a-3f3a-53d5-b178-7f985d9c5ecf"
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Resources/deployments', 'create-update-datasource')]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'initialization')]"
+      ]
+    }
+  ]
+}
